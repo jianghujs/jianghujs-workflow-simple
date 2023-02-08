@@ -28,7 +28,7 @@
               <v-col cols="4" xs="4" sm="2" md="1" xl="1" class="pl-0" v-for="(work, index) in template.list">
                 <div class="work-item-box">
                   <v-card 
-                    :href="'/<$ ctx.app.config.appId $>/page/jumpAddWorkflow?templateId=' + work.id"
+                    @click="doUiAction('startCreateWorkflow', {formItemList: work.formItemList, group: template.group})"
                     outlined 
                     tile 
                     class="work-item-content d-flex justify-center align-center">
@@ -49,6 +49,51 @@
           </v-card>
           <!-- <<<<<<<<<<<<< 页面内容 -->
         </div>
+        <!-- <<<<<<<<<<<<< 创建审批抽屉 -->
+        <v-navigation-drawer v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%"
+          class="elevation-24">
+          <v-form v-if="isCreateDrawerShown" ref="createForm" lazy-validation>
+            <!--抽屉标题-->
+            <v-row>
+              <span class="title pa-6 pl-8">创建审批</span>
+            </v-row>
+            <!--抽屉表单主体-->
+            <v-row class="mt-0 px-6">
+              <v-col cols="12" sm="12" md="4" v-for="(item, index) in createFormList" :key="index">
+                <form-item :form-item="item"></form-item>
+              </v-col>
+
+              <v-col cols="12" sm="12" md="4">
+                <span class="jh-input-label">附件</span>
+                xxx
+              </v-col>
+              <v-col cols="12" sm="12" md="12">
+                <span class="jh-input-label">审批流程 - 添加审批人</span>
+                <v-select
+                  v-model="createItem.approver"
+                  :items="userList"
+                  item-text="text"
+                  item-value="value"
+                  multiple
+                  dense single-line filled
+                  :rules="validationRules.requireRules" 
+                ></v-select>
+              </v-col>
+            </v-row>
+            <!--抽屉操作按钮-->
+            <v-row class="justify-end mx-0 mt-8 px-6">
+              <v-btn color="success" @click="doUiAction('createWorkflow')" small>保存</v-btn>
+              <v-btn class="ml-2" @click="isCreateDrawerShown = false" small>取消</v-btn>
+            </v-row>
+          </v-form>
+          <!--抽屉关闭按钮-->
+          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+            @click="isCreateDrawerShown = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- 创建审批抽屉 >>>>>>>>>>>>> -->
+
       </v-main>
     </v-app>
 
@@ -67,7 +112,7 @@
 {% block vueScript %}
 
 <!-- 加载页面组件 >>>>>>>>>>>>> -->
-{% include 'common/fixedTableHeightV4.html' %}
+{% include 'component/formItem.html' %}
 <!-- <<<<<<<<<<<<< 加载页面组件 -->
 
 <script type="module">
@@ -88,12 +133,75 @@
           disabled: true,
         }
       ],
+      validationRules: {
+        requireRules: [
+          v => !!v || 'This is required',
+        ],
+      },
+      userList: [],
       templateList: [
         {
           group: '假勤',
           list: [
-            { name: '请假', id: 'leave', icon: 'mdi-calendar-range', color: 'orange darken-2' },
-            { name: '加班', id: 'overtime', icon: 'mdi-account-clock', color: 'blue darken-2' },
+            { name: '请假', id: 'leave', icon: 'mdi-calendar-range', color: 'orange darken-2', formItemList: [
+              {
+                type: 'single',
+                typeName: '单选',
+                statement: '请假类型',
+                answer: '',
+                optionList: ['年假', '事假', '病假', '婚假', '产假', '其他']
+              },
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '开始时间',
+                answer: '',
+              },
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '结束时间',
+                answer: '',
+              },
+              {
+                type: 'input',
+                typeName: '文本',
+                statement: '请假时长',
+                answer: '',
+              },
+              {
+                type: 'short',
+                typeName: '文本框',
+                statement: '请假事由',
+                answer: '',
+              },
+            ] },
+            { name: '加班', id: 'overtime', icon: 'mdi-account-clock', color: 'blue darken-2', formItemList: [
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '开始时间',
+                answer: '',
+              },
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '结束时间',
+                answer: '',
+              },
+              {
+                type: 'input',
+                typeName: '文本',
+                statement: '加班时长',
+                answer: '',
+              },
+              {
+                type: 'short',
+                typeName: '文本框',
+                statement: '加班事由',
+                answer: '',
+              },
+            ] },
             { name: '出差', id: 'businessTrip', icon: 'mdi-airplane-takeoff', color: 'blue darken-2' },
             { name: '外出', id: 'out', icon: 'mdi-seat-outline', color: 'blue darken-2' },
             { name: '出勤', id: 'attendance', icon: 'mdi-account-clock', color: 'teal darken-2' },
@@ -113,10 +221,17 @@
             { name: '通用审批', id: 'goodsReturn', icon: 'mdi-check-network-outline', color: 'blue darken-2' },
           ]
         }
-      ]
+      ],
+      isCreateDrawerShown: false,
+      createFormList: [],
+      createItem: {
+        approver: [],
+        group: '',
+      }
     },
     watch: {},
-    mounted() {
+    created() {
+      this.getUserList();
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
@@ -130,28 +245,42 @@
           case 'jumpToAssignmentPaper':
             await this.jumpToAssignmentPaper(uiActionData);
             break;
+          case 'startCreateWorkflow':
+            await this.prepareCreateFormData(uiActionData);
+            await this.openCreateDrawer();
+            break;
+          case 'createWorkflow':
+            await this.prepareCreateValidate();
+            await this.confirmCreateItemDialog();
+            await this.prepareDoCreateItem();
+            await this.doCreateItem();
+            await this.closeCreateDrawer();
+            break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
             break;
         }
       },
 
-      async getTableData() {
-        this.isTableLoading = true;
+      async getUserList() {
         const result = await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'articleManagement',
-              actionId: 'selectItemList',
+              pageId: 'templateManagement',
+              actionId: 'selectUserList',
               actionData: {},
-              where: {articleAssignmentPublishStatus: 'publish'},
-              orderBy: [{ column: 'operationAt', order: 'desc' }]
+              orderBy: [{ column: 'userId', order: 'asc' }]
             }
           }
         });
 
-        this.tableData = result.data.appData.resultData.rows;
-        this.isTableLoading = false;
+        const userList = result.data.appData.resultData.rows;
+        this.userList = userList.map(user => {
+          return {
+            text: user.username,
+            value: user.userId
+          }
+        });
       },
       
       // ---------- 斑马纹开关 uiAction >>>>>>>>>> --------
@@ -162,6 +291,56 @@
       },
       // ---------- <<<<<<<<<< 斑马纹开关 uiAction --------
 
+
+      async prepareCreateFormData({formItemList, group}) {
+        if (!formItemList) {
+          await window.confirmDialog({title: "温馨提示", content: "该项目尚未开放"});
+          throw new Error("formItemList is null");
+        }
+        this.createFormList = formItemList;
+        this.createItem.group = group;
+      },
+
+      async openCreateDrawer() {
+        this.isCreateDrawerShown = true;
+      },
+      async prepareCreateValidate() {
+        if(await this.$refs.createForm.validate()) {
+          return true;
+        }
+        throw new Error("请完善表单信息")
+      },
+      async confirmCreateItemDialog() {
+        if (await window.confirmDialog({title: "新增", content: "确定新增吗？"}) === false) {
+          throw new Error("[confirmCreateFormDialog] 否");
+        }
+      },
+      prepareDoCreateItem() {
+        console.log('create', this.createFormList);
+      },
+
+      async doCreateItem() {
+        await window.jhMask.show();
+        
+        await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'templateManagement',
+              actionId: 'insertItem',
+              actionData: {
+                formItemList: this.createFormList,
+                taskUserList: this.createItem.approver,
+                group: this.createItem.group
+              }
+            }
+          }
+        })
+        // await window.jhMask.hide();
+        // await window.vtoast.success("新增学生成功");
+      },
+      async closeCreateDrawer() {
+        this.isCreateDrawerShown = false;
+      },
       // ---------- <<<<<<<<<<< 跳转考作业 --------
       jumpToAssignmentPaper(item) {
         window.location.href = "/<$ ctx.app.config.appId $>/page/assignmentPaper?articleId=" + item.articleId;

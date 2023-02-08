@@ -19,6 +19,9 @@ module.exports.tableEnum = Object.freeze({
   _user_session: "_user_session",
   _constant_ui: "_constant_ui",
   // ========================基础表============================
+  workflow: 'workflow',
+  task: 'task',
+  task_history: 'task_history',
   // ========================基础View============================
   // ========================View============================
   _view01_user: "_view01_user",
