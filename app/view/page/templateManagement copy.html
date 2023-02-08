@@ -19,58 +19,33 @@
 
         <div class="jh-page-body-container px-8">
           <!-- 页面内容 >>>>>>>>>>>>> -->
-          <v-card class="rounded-lg mb-4">
+          <v-card class="rounded-lg mb-4" v-for="(template, tIndex) in templateList" :key="tIndex">
             <v-row class="ma-0 py-0 px-4">
               <!--新增按钮-->
-              <v-col cols="12" xs="4" sm="4" md="4" xl="4" class="pl-0">
-                <!-- <v-btn color="success" small class="elevation-0 mr-2"
-                  @click="doUiAction('startCreateItem')">新增</v-btn> -->
+              <v-col cols="12" xs="12" sm="12" md="12" xl="12" class="" style="border-bottom: 1px solid #eee;">
+                {{template.group}}
               </v-col>
-              <v-spacer></v-spacer>
-              <!--搜索-->
-              <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="px-0">
-                <v-text-field v-model="searchInput" color="success" prefix="搜索：" class="jh-v-input" dense filled single-line hide-details></v-text-field>
+              <v-col cols="4" xs="4" sm="2" md="1" xl="1" class="pl-0" v-for="(work, index) in template.list">
+                <div class="work-item-box">
+                  <v-card 
+                    @click="doUiAction('startCreateWorkflow', {formItemList: work.formItemList, group: template.group})"
+                    outlined 
+                    tile 
+                    class="work-item-content d-flex justify-center align-center">
+                    <div class="work-item-label d-flex flex-column justify-center align-center" >
+                      <v-icon
+                        class="mb-2"
+                        large
+                        :color="work.color"
+                      >
+                        {{work.icon}}
+                      </v-icon>
+                      {{work.name}}
+                    </div>
+                  </v-card>
+                </div>
               </v-col>
             </v-row>
-            <!--表格-->
-            <v-data-table
-              :headers="headers"
-              :items="tableData"
-              :search="searchInput"
-              :footer-props="{ itemsPerPageOptions: [20, 50, -1], itemsPerPageText: '每页行数', itemsPerPageAllText: '所有'}"
-              :items-per-page="-1"
-              mobile-breakpoint="0"
-              :loading="isTableLoading"
-              :class="{'zebraLine': isTableZebraLineShown }"
-              checkbox-color="success"
-              fixed-header
-              class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
-              <!--表格行操作按钮-->
-              <template v-slot:item.action="{ item }">
-                <span role="button" class="success--text jh-font-size-3 pr-2"
-                  @click="doUiAction('startCreateWorkflow', {formItemList: item.formItemList, group: item.name})">
-                  <v-icon size="14" class="success--text">mdi-note-edit-outline</v-icon>申请
-                </span>
-              </template>
-              <!--表格底部右侧功能按钮-->
-              <template v-slot:footer.prepend>
-                <v-btn icon @click="doUiAction('openTableZebraLineMenu', $event)">
-                  <v-icon>mdi-menu</v-icon>
-                </v-btn>
-                <v-menu top offset-y :close-on-content-click="false" v-model="isTableZebraLineMenuShown" :position-x="tableZebraLineMenuPosition.x" :position-y="tableZebraLineMenuPosition.y">
-                  <v-list>
-                    <v-list-item>
-                      <v-switch v-model="isTableZebraLineShown" hide-details class="ma-0" label="显示斑马纹" dense flat></v-switch>
-                    </v-list-item>
-                  </v-list>
-                </v-menu>
-              </template>
-              <!--表格底部右侧分页-->
-              <template v-slot:footer.page-text="pagination">
-                <span>{{pagination.pageStart}}-{{pagination.pageStop}}</span>
-                <span class="ml-1">共{{pagination.itemsLength}}条</span>
-              </template>
-            </v-data-table>
           </v-card>
           <!-- <<<<<<<<<<<<< 页面内容 -->
         </div>
@@ -119,20 +94,6 @@
         </v-navigation-drawer>
         <!-- 创建审批抽屉 >>>>>>>>>>>>> -->
 
-
-        <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
-        <v-navigation-drawer v-model="isHelpPageDrawerShown" fixed temporary right width="80%" hide-overlay
-          class="elevation-24">
-          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#3.doUiAction.md`" width="100%"
-            height="100%"></iframe>
-
-          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
-            @click="isHelpPageDrawerShown = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-navigation-drawer>
-        <!-- <<<<<<<<<<<<< 帮助页抽屉 -->
-
       </v-main>
     </v-app>
 
@@ -177,84 +138,90 @@
           v => !!v || 'This is required',
         ],
       },
-      isTableLoading: false,
       userList: [],
-      tableData: [
-        { name: '请假', id: 'leave', icon: 'mdi-calendar-range', color: 'orange darken-2', formItemList: [
-          {
-            type: 'single',
-            typeName: '单选',
-            statement: '请假类型',
-            answer: '',
-            optionList: ['年假', '事假', '病假', '婚假', '产假', '其他']
-          },
-          {
-            type: 'date',
-            typeName: '时间',
-            statement: '开始时间',
-            answer: '',
-          },
-          {
-            type: 'date',
-            typeName: '时间',
-            statement: '结束时间',
-            answer: '',
-          },
-          {
-            type: 'input',
-            typeName: '文本',
-            statement: '请假时长',
-            answer: '',
-          },
-          {
-            type: 'short',
-            typeName: '文本框',
-            statement: '请假事由',
-            answer: '',
-          },
-        ] },
-        { name: '加班', id: 'overtime', icon: 'mdi-account-clock', color: 'blue darken-2', formItemList: [
-          {
-            type: 'date',
-            typeName: '时间',
-            statement: '开始时间',
-            answer: '',
-          },
-          {
-            type: 'date',
-            typeName: '时间',
-            statement: '结束时间',
-            answer: '',
-          },
-          {
-            type: 'input',
-            typeName: '文本',
-            statement: '加班时长',
-            answer: '',
-          },
-          {
-            type: 'short',
-            typeName: '文本框',
-            statement: '加班事由',
-            answer: '',
-          },
-        ] },
-        { name: '出差', id: 'businessTrip', icon: 'mdi-airplane-takeoff', color: 'blue darken-2' },
-        { name: '外出', id: 'out', icon: 'mdi-seat-outline', color: 'blue darken-2' },
-        { name: '出勤', id: 'attendance', icon: 'mdi-account-clock', color: 'teal darken-2' },
-        { name: '补卡', id: 'makeUpCard', icon: 'mdi-account-clock', color: 'blue darken-2' },
-        { name: '调休', id: 'adjustRest', icon: 'mdi-account-clock', color: 'teal darken-2' },
-        { name: '调班', id: 'adjustClass', icon: 'mdi-account-clock', color: 'blue darken-2' },
+      templateList: [
+        {
+          group: '假勤',
+          list: [
+            { name: '请假', id: 'leave', icon: 'mdi-calendar-range', color: 'orange darken-2', formItemList: [
+              {
+                type: 'single',
+                typeName: '单选',
+                statement: '请假类型',
+                answer: '',
+                optionList: ['年假', '事假', '病假', '婚假', '产假', '其他']
+              },
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '开始时间',
+                answer: '',
+              },
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '结束时间',
+                answer: '',
+              },
+              {
+                type: 'input',
+                typeName: '文本',
+                statement: '请假时长',
+                answer: '',
+              },
+              {
+                type: 'short',
+                typeName: '文本框',
+                statement: '请假事由',
+                answer: '',
+              },
+            ] },
+            { name: '加班', id: 'overtime', icon: 'mdi-account-clock', color: 'blue darken-2', formItemList: [
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '开始时间',
+                answer: '',
+              },
+              {
+                type: 'date',
+                typeName: '时间',
+                statement: '结束时间',
+                answer: '',
+              },
+              {
+                type: 'input',
+                typeName: '文本',
+                statement: '加班时长',
+                answer: '',
+              },
+              {
+                type: 'short',
+                typeName: '文本框',
+                statement: '加班事由',
+                answer: '',
+              },
+            ] },
+            { name: '出差', id: 'businessTrip', icon: 'mdi-airplane-takeoff', color: 'blue darken-2' },
+            { name: '外出', id: 'out', icon: 'mdi-seat-outline', color: 'blue darken-2' },
+            { name: '出勤', id: 'attendance', icon: 'mdi-account-clock', color: 'teal darken-2' },
+            { name: '补卡', id: 'makeUpCard', icon: 'mdi-account-clock', color: 'blue darken-2' },
+            { name: '调休', id: 'adjustRest', icon: 'mdi-account-clock', color: 'teal darken-2' },
+            { name: '调班', id: 'adjustClass', icon: 'mdi-account-clock', color: 'blue darken-2' },
+          ]
+        },
+        {
+          group: '行政',
+          list: [
+            { name: '会议室预定', id: 'metting', icon: 'mdi-account-multiple-outline', color: 'green darken-2' },
+            { name: '用车申请', id: 'car', icon: 'mdi-car-back', color: 'teal darken-2' },
+            { name: '用印申请', id: 'seal', icon: 'mdi-network-outline', color: 'orange darken-2' },
+            { name: '物品领用', id: 'goods', icon: 'mdi-network-outline', color: 'light-blue darken-2' },
+            { name: '物品借用', id: 'goodsBorrow', icon: 'mdi-network-outline', color: 'indigo darken-2' },
+            { name: '通用审批', id: 'goodsReturn', icon: 'mdi-check-network-outline', color: 'blue darken-2' },
+          ]
+        }
       ],
-      headers: [
-        { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
-        { text: '审批名称', value: 'name' },
-      ],
-      searchInput: '',
-      isHelpPageDrawerShown: false,
-      isTableZebraLineShown: true,
-      isTableZebraLineMenuShown: false,
-      tableZebraLineMenuPosition: {x: null, y: null},
       isCreateDrawerShown: false,
       createFormList: [],
       createItem: {

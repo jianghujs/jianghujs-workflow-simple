@@ -51,7 +51,10 @@ class TaskService extends Service {
     whereLike.taskViewUserList = userId;
   }
 
-  // 创建审批工作流
+  /**
+   * 创建审批工作流
+   * @returns void
+   */
   async createTask() {
     const { actionData } = this.ctx.request.body.appData;
     const { jianghuKnex, config } = this.app;
@@ -115,7 +118,11 @@ class TaskService extends Service {
     });
     return startData;
   }
-
+  /**
+   * 获取组下的所有用户
+   * @param {*} groupId 
+   * @returns 
+   */
   async getGroupUserList(groupId) {
     const { jianghuKnex, config } = this.app;
     const userList = await jianghuKnex(tableEnum._user_group_role).where({groupId}).select('userId');
@@ -328,7 +335,7 @@ class TaskService extends Service {
     });
   }
   async buildNext(actionData, trx) {
-    const { type, id, taskTpl, taskComment } = actionData;
+    const { type, id, taskComment } = actionData;
     const { userId } = this.ctx.userInfo;
 
     // 准备任务数据
@@ -345,14 +352,15 @@ class TaskService extends Service {
     // 写入exec历史
     const taskHistory = await trx(tableEnum.task_history, this.ctx).where({taskId: taskInfo.taskId}).orderBy('operationAt', 'desc').select();
     const [prevHistory] = taskHistory;
-    let taskFormInput = JSON.parse(taskInfo.taskFormInput);
-    taskFormInput.input = taskTpl.input;
-    taskFormInput = JSON.stringify(taskFormInput);
-    const historyTaskFormInput = JSON.parse(taskInfo.taskFormInput)
-    historyTaskFormInput .input = taskTpl.input;
+    // let taskFormInput = JSON.parse(taskInfo.taskFormInput);
+    // taskFormInput.input = taskTpl.input;
+    // taskFormInput = JSON.stringify(taskFormInput);
+    // const historyTaskFormInput = JSON.parse(taskInfo.taskFormInput)
+    // historyTaskFormInput .input = taskTpl.input;
     const history = {
       ...taskInfo,
-      taskFormInput: JSON.stringify(historyTaskFormInput),
+      // taskFormInput: JSON.stringify(historyTaskFormInput),
+      taskFormInput: taskInfo.taskFormInput,
       taskExplain: currentNode.label,
       taskConfigId: currentNode.id,
       taskHandleDesc:  type,
@@ -418,7 +426,7 @@ class TaskService extends Service {
         await trx(tableEnum.task).insert({
           ...taskInfo,
           taskId: taskInfo.taskId,
-          taskFormInput,
+          taskFormInput: taskInfo.taskFormInput,
           taskNextConfigList: JSON.stringify(nextLineList),
           taskLineTypeList: endNode.lineTypeList,
           taskEditUserList,

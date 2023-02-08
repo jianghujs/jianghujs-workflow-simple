@@ -41,7 +41,7 @@ class WorkflowService extends Service {
     workflowConfigCustom.forEach(item => {
       item.assignValue = taskUserList;
     })
-    actionData.workflowConfigCustom = workflowConfigCustom;
+    actionData.workflowConfigCustom = JSON.stringify({nodeListOfUserTaskNode: workflowConfigCustom});
     actionData.workflowId = workflow.workflowId;
     actionData.taskTitle = `[${group}]${username}`;
     actionData.workflowForm = formItemList;
@@ -51,6 +51,22 @@ class WorkflowService extends Service {
     })
     actionData.workflowFormData = formData;
     await this.ctx.service.task.createTask()
+  }
+  /**
+   * 获取节点审批历史
+   * @returns 
+   */
+  async getTaskHistory() {
+    const { taskId } = this.ctx.request.body.appData.actionData;
+    const { jianghuKnex } = this.app;
+
+    const taskInfo = await jianghuKnex(tableEnum.task, this.ctx).where({taskId}).first();
+    const taskHistoryList = await jianghuKnex(tableEnum.task_history).where({taskId: taskInfo.taskId}).orderBy('id', 'asc').select();
+    // const userList = await jianghuKnex(tableEnum._view01_user).whereIn('userId', taskInfo.taskViewUserList.split(',')).select();
+    // taskInfo.workflowConfig = JSON.parse(taskInfo.workflowConfig);
+    // return this.ctx.service.task.getTaskHistoryConfigList(taskInfo.workflowConfig, taskHistoryList, userList);
+    const lineTypeList = taskInfo.taskLineTypeList;
+    return {taskHistoryList, lineTypeList};
   }
 }
 module.exports = WorkflowService;
