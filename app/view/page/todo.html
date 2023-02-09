@@ -321,7 +321,7 @@
           row.taskFormInput = JSON.parse(row.taskFormInput);
           row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
         });
-        this.tableData = rows.filter(item => !item.taskEditedUserList.includes(this.userId));
+        this.tableData = rows.filter(item => !item.taskEditedUserList || !item.taskEditedUserList.includes(this.userId));
         this.isTableLoading = false;
       },
       async getHistoryData() {

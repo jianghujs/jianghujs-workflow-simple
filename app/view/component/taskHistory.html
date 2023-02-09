@@ -59,7 +59,7 @@
           {text: "节点说明", value: "taskExplain", width: 200}, 
           {text: "操作人", value: "operationByUser", width: 80}, 
           {text: "操作描述", value: "taskHandleDesc", width: 120}, 
-          {text: "操作时间", value: "operation-at", width: 250},
+          {text: "操作时间", value: "operationAt", width: 250},
         ],
         tableData: [],
       };
@@ -87,6 +87,9 @@
           }
         })
         const {taskHistoryList, lineTypeList} = result.data.appData.resultData;
+        taskHistoryList.forEach(task => {
+          task.operationAt = task.taskStatus != 'end' ? dayjs(task.operationAt).format('YYYY-MM-DD HH:mm:ss') : ''
+        })
         this.tableData = taskHistoryList;
         this.$emit('line-type-list', lineTypeList);
         this.isTableLoading = false;

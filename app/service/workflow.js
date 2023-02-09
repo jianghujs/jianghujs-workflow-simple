@@ -29,20 +29,15 @@ class WorkflowService extends Service {
   async createWorkflowTask() {
     const { actionData } = this.ctx.request.body.appData;
     const { jianghuKnex } = this.app;
-    const { group, formItemList, taskUserList } = actionData;
+    const { group, formItemList, taskUserList, workflowConfigCustom, workflowId } = actionData;
     const { userId, username } = this.ctx.userInfo;
     
-    let workflow = await jianghuKnex(tableEnum.workflow, this.ctx).where({workflowId: '6D7HV6Twfer_xtmbqUsDO'}).first();
+    let workflow = await jianghuKnex(tableEnum.workflow, this.ctx).where({workflowId}).first();
     if(!workflow) {
       throw new BizError(errorInfoEnum.workflow_not_found);
     }
-    const workflowPersonList = JSON.parse(workflow.workflowConfig).nodeList
-    const workflowConfigCustom = workflowPersonList.filter(item=> item.id.includes('userTask-'));
-    workflowConfigCustom.forEach(item => {
-      item.assignValue = taskUserList;
-      // item.isNeedAllApproval = true; 开启所有人审核
-    })
-    actionData.workflowConfigCustom = JSON.stringify({nodeListOfUserTaskNode: workflowConfigCustom});
+    
+    actionData.workflowConfigCustom = JSON.stringify(workflowConfigCustom);
     actionData.workflowId = workflow.workflowId;
     actionData.taskTitle = `[${group}]${username}`;
     actionData.workflowForm = formItemList;

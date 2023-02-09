@@ -93,16 +93,27 @@
               </v-col>
               <v-col cols="12" sm="12" md="12">
                 <span class="jh-input-label">审批流程 - 添加审批人</span>
-                <v-select
-                  v-model="createItem.approver"
-                  :items="userList"
-                  item-text="text"
-                  item-value="value"
-                  multiple
-                  dense single-line filled
-                  required 
-                  :rules="validationRules.requireRules" 
-                ></v-select>
+                <v-row v-for="item in workflowPersonList">
+                  <v-col cols="2">
+                    <v-text-field class="cus-v-input " dense filled single-line v-model="item.label" disabled></v-text-field>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-autocomplete 
+                      class="cus-v-input mr-2" 
+                      dense filled single-line clearable
+                      :items="userList" 
+                      item-text="username" 
+                      item-value="userId"
+                      multiple
+                      :rules="validationRules.requireRules"
+                      v-model="item.assignValue">
+                    </v-autocomplete>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-checkbox dense filled v-model="item.isNeedAllApproval" label="是否需要所有人审批" hide-details ></v-checkbox>
+                  </v-col>
+                  
+                </v-row>
               </v-col>
             </v-row>
             <!--抽屉操作按钮-->
@@ -258,13 +269,15 @@
       isCreateDrawerShown: false,
       createFormList: [],
       createItem: {
-        approver: [],
         group: '',
-      }
+      },
+      workflowPersonList: [],
+      workflowId: 'Z96BDz-0NTowTLeMTxIUT'
     },
     watch: {},
     created() {
       this.getUserList();
+      this.getWorkflow();
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
@@ -305,12 +318,25 @@
         });
 
         const userList = result.data.appData.resultData.rows;
-        this.userList = userList.map(user => {
-          return {
-            text: user.username,
-            value: user.userId
+        this.userList = userList;
+      },
+      async getWorkflow() {
+        const result = await window.jianghuAxios({
+          data: {
+            appData: {
+              pageId: 'templateManagement',
+              actionId: 'selectWorkflowList',
+              where: {workflowId: this.workflowId}
+            }
           }
         });
+
+        const workflowList = result.data.appData.resultData.rows;
+        if (!workflowList.length) {
+          throw new Error('缺少默认流程');
+        }
+        const workflowNodeList = JSON.parse(workflowList[0].workflowConfig).nodeList;
+        this.workflowPersonList = workflowNodeList.filter(node => node.id.includes('userTask-'));
       },
       
       // ---------- <<<<<<<<<< 斑马纹开关 uiAction --------
@@ -335,10 +361,19 @@
         this.isCreateDrawerShown = true;
       },
       async prepareCreateValidate() {
-        if(await this.$refs.createForm.validate()) {
-          return true;
+        if(!await this.$refs.createForm.validate()) {
+          throw new Error("请完善表单信息")
         }
-        throw new Error("请完善表单信息")
+
+        this.workflowPersonList.forEach(workflowPerson => {
+          workflowPerson.assignValue = workflowPerson.assignValue || [];
+          workflowPerson.assignValue = workflowPerson.assignValue.filter(userId => this.userList.find(u => u.userId === userId));
+          workflowPerson.origin.properties.assignValue = workflowPerson.assignValue;
+          if (workflowPerson.assignValue.length === 0) {
+            window.vtoast.fail({ message: `${workflowPerson.label}必填!` });
+            throw new Error("[prepareValidate] 审批人 false");
+          }
+        });
       },
       async confirmCreateWorkDialog() {
         if (await window.confirmDialog({title: "新增", content: "确定新增吗？"}) === false) {
@@ -359,8 +394,9 @@
               actionId: 'insertItem',
               actionData: {
                 formItemList: this.createFormList,
-                taskUserList: this.createItem.approver,
-                group: this.createItem.group
+                group: this.createItem.group,
+                workflowId: this.workflowId,
+                workflowConfigCustom: JSON.stringify({ nodeListOfUserTaskNode: this.workflowPersonList })
               }
             }
           }
