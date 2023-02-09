@@ -48,7 +48,6 @@
               <!--表格行操作按钮-->
               <template v-slot:item.action="{ item }">
                 <span role="button" class="success--text jh-font-size-3 pr-2"
-                  v-if="item.formItemList"
                   @click="doUiAction('startCreateWorkflow', {formItemList: item.formItemList, group: item.name})">
                   <v-icon size="14" class="success--text">mdi-note-edit-outline</v-icon>申请
                 </span>
