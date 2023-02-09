@@ -13,6 +13,12 @@
       class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
       <template v-slot:item.taskHandleDesc="{ item }">
         <span v-if="item.taskConfigId.includes('userTask-')">
+
+          <v-icon
+            large
+          >
+          mdi-arrow-right-thin
+          </v-icon>
           <v-chip
             v-if="item.taskHandleDesc === '拒绝'"
             color="red"
