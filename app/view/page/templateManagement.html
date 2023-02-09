@@ -74,56 +74,11 @@
           </v-card>
           <!-- <<<<<<<<<<<<< 页面内容 -->
         </div>
-        <!-- <<<<<<<<<<<<< 创建审批抽屉 -->
-        <v-navigation-drawer v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%"
-          class="elevation-24">
-          <v-form v-if="isCreateDrawerShown" ref="createForm" lazy-validation>
-            <!--抽屉标题-->
-            <v-row>
-              <span class="title pa-6 pl-8">创建审批</span>
-            </v-row>
-            <!--抽屉表单主体-->
-            <v-row class="mt-0 px-6">
-              <v-col cols="12" sm="12" md="4" v-for="(item, index) in createFormList" :key="index">
-                <form-item :form-item="item"></form-item>
-              </v-col>
-
-              <v-col cols="12" sm="12" md="4">
-                <span class="jh-input-label">附件</span>
-                xxx
-              </v-col>
-              <v-col cols="12" sm="12" md="12">
-                <span class="jh-input-label">审批流程 - 添加审批人</span>
-                <v-select
-                  v-model="createItem.approver"
-                  :items="userList"
-                  item-text="text"
-                  item-value="value"
-                  multiple
-                  dense single-line filled
-                  :rules="validationRules.requireRules" 
-                ></v-select>
-              </v-col>
-            </v-row>
-            <!--抽屉操作按钮-->
-            <v-row class="justify-end mx-0 mt-8 px-6">
-              <v-btn color="success" @click="doUiAction('createWorkflow')" small>保存</v-btn>
-              <v-btn class="ml-2" @click="isCreateDrawerShown = false" small>取消</v-btn>
-            </v-row>
-          </v-form>
-          <!--抽屉关闭按钮-->
-          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
-            @click="isCreateDrawerShown = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-navigation-drawer>
-        <!-- 创建审批抽屉 >>>>>>>>>>>>> -->
-
 
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
         <v-navigation-drawer v-model="isHelpPageDrawerShown" fixed temporary right width="80%" hide-overlay
           class="elevation-24">
-          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#3.doUiAction.md`" width="100%"
+          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#templateManagement.md`" width="100%"
             height="100%"></iframe>
 
           <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
@@ -255,7 +210,6 @@
       isTableZebraLineShown: true,
       isTableZebraLineMenuShown: false,
       tableZebraLineMenuPosition: {x: null, y: null},
-      isCreateDrawerShown: false,
       createFormList: [],
       createItem: {
         approver: [],
@@ -275,18 +229,15 @@
           case 'openTableZebraLineMenu':
             await this.openTableZebraLineMenu(uiActionData);
             break;
-          case 'jumpToAssignmentPaper':
-            await this.jumpToAssignmentPaper(uiActionData);
-            break;
           case 'startCreateWorkflow':
             await this.prepareCreateFormData(uiActionData);
             await this.openCreateDrawer();
             break;
           case 'createWorkflow':
             await this.prepareCreateValidate();
-            await this.confirmCreateItemDialog();
-            await this.prepareDoCreateItem();
-            await this.doCreateItem();
+            await this.confirmCreateWorkDialog();
+            await this.prepareDoWorkItem();
+            await this.doCreateWork();
             await this.closeCreateDrawer();
             break;
           default:
@@ -316,15 +267,15 @@
         });
       },
       
-      // ---------- 斑马纹开关 uiAction >>>>>>>>>> --------
+      // ---------- <<<<<<<<<< 斑马纹开关 uiAction --------
       async openTableZebraLineMenu(funObj) {
         this.tableZebraLineMenuPosition.x = funObj.x -funObj.offsetX + 10;
         this.tableZebraLineMenuPosition.y = window.innerHeight - 50;
         this.isTableZebraLineMenuShown = !this.isTableZebraLineMenuShown;
       },
-      // ---------- <<<<<<<<<< 斑马纹开关 uiAction --------
+      // ---------- 斑马纹开关 uiAction >>>>>>>>>> --------
 
-
+      // ---------- <<<<<<<<<< 申请项目审核 --------
       async prepareCreateFormData({formItemList, group}) {
         if (!formItemList) {
           await window.confirmDialog({title: "温馨提示", content: "该项目尚未开放"});
@@ -343,16 +294,16 @@
         }
         throw new Error("请完善表单信息")
       },
-      async confirmCreateItemDialog() {
+      async confirmCreateWorkDialog() {
         if (await window.confirmDialog({title: "新增", content: "确定新增吗？"}) === false) {
           throw new Error("[confirmCreateFormDialog] 否");
         }
       },
-      prepareDoCreateItem() {
+      prepareDoWorkItem() {
         console.log('create', this.createFormList);
       },
 
-      async doCreateItem() {
+      async doCreateWork() {
         await window.jhMask.show();
         
         await window.jianghuAxios({
@@ -374,11 +325,7 @@
       async closeCreateDrawer() {
         this.isCreateDrawerShown = false;
       },
-      // ---------- <<<<<<<<<<< 跳转考作业 --------
-      jumpToAssignmentPaper(item) {
-        window.location.href = "/<$ ctx.app.config.appId $>/page/assignmentPaper?articleId=" + item.articleId;
-      }
-      // ---------- 跳转考作业 >>>>>>>>>>>> --------
+      // ---------- 申请项目审核 >>>>>>>>>> --------
     }
   })
 </script>
