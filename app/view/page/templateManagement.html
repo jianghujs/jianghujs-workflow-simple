@@ -190,7 +190,7 @@
       isTableLoading: false,
       userList: [],
       tableData: [
-        { name: '请假', id: 'leave', icon: 'mdi-calendar-range', color: 'orange darken-2', formItemList: [
+        { name: '请假', desc: '正常工作日请假', id: 'leave', icon: 'mdi-calendar-range', color: 'orange darken-2', formItemList: [
           {
             type: 'single',
             typeName: '单选',
@@ -223,7 +223,7 @@
             answer: '',
           },
         ] },
-        { name: '加班', id: 'overtime', icon: 'mdi-account-clock', color: 'blue darken-2', formItemList: [
+        { name: '加班', desc: '工作日早晚加班', id: 'overtime', icon: 'mdi-account-clock', color: 'blue darken-2', formItemList: [
           {
             type: 'date',
             typeName: '时间',
@@ -249,16 +249,15 @@
             answer: '',
           },
         ] },
-        { name: '出差', id: 'businessTrip', icon: 'mdi-airplane-takeoff', color: 'blue darken-2' },
-        { name: '外出', id: 'out', icon: 'mdi-seat-outline', color: 'blue darken-2' },
-        { name: '出勤', id: 'attendance', icon: 'mdi-account-clock', color: 'teal darken-2' },
-        { name: '补卡', id: 'makeUpCard', icon: 'mdi-account-clock', color: 'blue darken-2' },
-        { name: '调休', id: 'adjustRest', icon: 'mdi-account-clock', color: 'teal darken-2' },
-        { name: '调班', id: 'adjustClass', icon: 'mdi-account-clock', color: 'blue darken-2' },
+        { name: '出差', desc: '外地往返公干', desc: '外出公干', id: 'businessTrip', icon: 'mdi-airplane-takeoff', color: 'blue darken-2' },
+        { name: '补卡', desc: '工作日忘记打卡', id: 'makeUpCard', icon: 'mdi-account-clock', color: 'blue darken-2' },
+        { name: '调休', desc: '某节假日紧急工作后调换休息日期', id: 'adjustRest', icon: 'mdi-account-clock', color: 'teal darken-2' },
+        { name: '调班', desc: '因个人事务和同事调换工作时间', id: 'adjustClass', icon: 'mdi-account-clock', color: 'blue darken-2' },
       ],
       headers: [
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
         { text: '审批名称', value: 'name' },
+        { text: '审批名称', value: 'desc' },
       ],
       searchInput: '',
       isHelpPageDrawerShown: false,
@@ -272,7 +271,7 @@
         group: '',
       },
       workflowPersonList: [],
-      workflowId: 'Z96BDz-0NTowTLeMTxIUT'
+      workflowId: '6D7HV6Twfer_xtmbqUsDO'
     },
     watch: {},
     created() {
@@ -336,6 +335,9 @@
           throw new Error('缺少默认流程');
         }
         const workflowNodeList = JSON.parse(workflowList[0].workflowConfig).nodeList;
+        workflowNodeList.forEach(node => {
+          node.isNeedAllApproval = true;
+        });
         this.workflowPersonList = workflowNodeList.filter(node => node.id.includes('userTask-'));
       },
       

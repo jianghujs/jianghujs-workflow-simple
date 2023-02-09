@@ -9,7 +9,7 @@
       <v-main class="mt-15">
         <!-- 头部内容 >>>>>>>>>>>>> -->
         <div class="jh-page-second-bar px-8">
-          <div class="pt-3 text-h7 font-weight-bold">待办审批
+          <div class="pt-3 text-h7 font-weight-bold">审批记录
             <!-- 帮助页按钮 -->
             <v-icon @click="isHelpPageDrawerShown = true" color="success" small>mdi-help-circle-outline</v-icon>
           </div>
@@ -22,37 +22,6 @@
           <v-card class="rounded-lg">
             <v-row class="ma-0 py-0 px-4">
               <v-spacer></v-spacer>
-              <!--切换状态-->
-              <v-col cols="12" xs="4" sm="4" md="4" xl="4" class="pl-0 d-flex justify-end">
-                <v-btn-toggle
-                  v-model="workflowType"
-                  borderless
-                  color="success"
-                >
-                  <v-btn value="todo" small>
-                    <v-badge
-                      v-if="tableData.length"
-                      inline
-                      :content="tableData.length"
-                      color="warning"
-                    >
-                      <span class="">待处理</span>
-                    </v-badge>
-                    <span v-else class="">待处理</span>
-                  </v-btn>
-                  <v-btn value="history" small>
-                    <v-badge
-                      v-if="historyData.length"
-                      inline
-                      :content="historyData.length"
-                      color="grey darken-3"
-                    >
-                      <span class="">已处理</span>
-                    </v-badge>
-                    <span v-else class="">已处理</span>
-                  </v-btn>
-                </v-btn-toggle>
-              </v-col>
               <!--搜索-->
               <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="px-0">
                 <v-text-field v-model="searchInput" color="success" prefix="搜索：" class="jh-v-input" dense filled hide-details
@@ -62,7 +31,7 @@
             <!--表格-->
             <v-data-table
               :headers="headers"
-              :items="tableDataList"
+              :items="tableData"
               :search="searchInput"
               :footer-props="{ itemsPerPageOptions: [20, 50, -1], itemsPerPageText: '每页行数', itemsPerPageAllText: '所有'}"
               :items-per-page="-1"
@@ -75,31 +44,26 @@
 
               <template v-slot:item.taskTitle="{ item }">
                 <span>{{item.taskTitle}}</span>
-                <span v-if="workflowType != 'todo'">
-                  <v-chip
-                    v-if="item.taskHandleDesc === '拒绝'" label outlined
-                    color="red"
-                    small
-                  >
-                    已{{item.taskHandleDesc}}
-                  </v-chip>
-                  <v-chip
-                    v-else label outlined
-                    color="green"
-                    small
-                  >
-                    已{{item.taskHandleDesc}}
-                  </v-chip>
-                </span>
+              </template>
+              <template v-slot:item.taskStatus="{ item }">
+                <v-chip
+                  v-if="item.taskStatus === '已结束'" label outlined
+                  color="red"
+                  small
+                >
+                  {{item.taskStatus}}
+                </v-chip>
+                <v-chip
+                  v-else label outlined
+                  color="green"
+                  small
+                >
+                  {{item.taskStatus}}
+                </v-chip>
               </template>
               <!--表格行操作按钮-->
               <template v-slot:item.action="{ item }">
-                <span v-if="workflowType === 'todo'" role="button" class="success--text jh-font-size-3 pr-2"
-                  @click="doUiAction('startUpdateItem', item)">
-                  <v-icon size="14" class="success--text">mdi-note-edit-outline</v-icon>
-                  审核
-                </span>
-                <span v-else role="button" class="success--text jh-font-size-3 pr-2"
+                <span role="button" class="success--text jh-font-size-3 pr-2"
                   @click="doUiAction('startUpdateItem', item)">
                   查看
                 </span>
@@ -126,49 +90,25 @@
           </v-card>
           <!-- <<<<<<<<<<<<< 页面内容 -->
           <!--编辑抽屉-->
-          <v-navigation-drawer v-model="isSubmitDrawerShown" :permanent="isSubmitDrawerShown" fixed temporary right hide-overlay width="80%"
+          <v-navigation-drawer v-model="isViewDrawerShown" :permanent="isViewDrawerShown" fixed temporary right hide-overlay width="80%"
             class="elevation-24">
-            <v-form v-if="isSubmitDrawerShown" ref="updateForm" lazy-validation>
+            <v-form v-if="isViewDrawerShown" ref="updateForm" lazy-validation>
               <!--抽屉标题-->
               <v-row>
-                <span class="title pa-6 pl-8">审核信息</span>
+                <span class="title pa-6 pl-8">历史审核记录</span>
               </v-row>
               <!--抽屉表单-->
               <v-row class="mt-0 px-6">
                 <v-col cols="12" sm="12" md="12">
                   <span class="jh-input-label">审核申请信息</span>
-                  <v-card class="rounded-lg px-4" outlined>
-                    <v-row class="my-0">
-                      <v-col cols="12" sm="12" md="6" v-for="(item, key, index) in updateItem.taskFormInput.input">
-                        <span class="jh-input-label" style="color: gray">{{key}}:</span> 
-                        <span>{{item}}</span>
-                      </v-col>
-                    </v-row>
-                  </v-card>
-                </v-col>
-                <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">备注</span>
-                  <v-textarea class="jh-v-input" no-resize dense single-line filled label="备注"
-                    v-model="updateItem.taskComment" :readonly="workflowType != 'todo'"></v-textarea>
-                </v-col>
-              </v-row>
-              <!--抽屉操作按钮-->
-              <v-row class="justify-end mx-0 mt-8 px-6">
-                <v-btn color="success" class="mx-4" v-for="item in lineTypeList" v-if="item.type" @click="doUiAction('submitNode', item.type)">
-                  {{ item.type }}
-                </v-btn>
-              </v-row>
-              <v-row class="mt-0 px-6">
-                <v-col cols="12" sm="12" md="12">
-                  <span class="jh-input-label">审核历史</span>
-                  <task-history :task-id="updateItem.taskId" @line-type-list="setLineTypeList"></task-history>
+                  <task-history :task-id="updateItem.taskId"></task-history>
                 </v-col>
               </v-row>
             </v-form>
 
             <!--抽屉关闭按钮-->
             <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
-              @click="isSubmitDrawerShown = false">
+              @click="isViewDrawerShown = false">
               <v-icon>mdi-close</v-icon>
             </v-btn>
           </v-navigation-drawer>
@@ -246,11 +186,12 @@
       headers: [
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
         { text: "审批项", value: "taskTitle" },
+        { text: "审核状态", value: "taskStatus" },
         { text: "操作者", value: "operationByUser", width: 120 },
         { text: "操作时间", value: "operationAt", width: 250 }
       ],
 
-      isSubmitDrawerShown: false,
+      isViewDrawerShown: false,
       updateItem: {},
       workflowType: 'todo', // todo, history
       lineTypeList: [],
@@ -258,24 +199,17 @@
     },
     // 计算
     computed: {
-      tableDataList() {
-        return this.workflowType === 'todo' ? this.tableData : this.historyData;
-      },
     },
     watch: {
     },
     mounted() {
       this.doUiAction('getTableData');
-      this.doUiAction('getHistoryData');
     },
     methods: {
       async doUiAction(uiActionId, uiActionData) {
         switch (uiActionId) {
           case 'getTableData':
             await this.getTableData();
-            break;
-          case 'getHistoryData':
-            await this.getHistoryData();
             break;
           case 'openDataPicker':
             await this.openDataPicker(uiActionData);
@@ -286,14 +220,6 @@
           case 'startUpdateItem':
             await this.prepareUpdateFormData(uiActionData);
             await this.openUpdateDrawer();
-            break;
-          case 'submitNode':
-            await this.confirmSumitDialog();
-            await this.submitForReview(uiActionData);
-            await this.closeSubmitDrawer();
-            await this.clearSubmitData();
-            this.getTableData();
-            this.getHistoryData();
             break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -306,45 +232,26 @@
         const result = await window.jianghuAxios({
           data: {
             appData: {
-              pageId: 'todo',
+              pageId: 'taskHistory',
               actionId: 'selectItemList',
               actionData: {},
-              where: {taskStatus: 'running'},
-              whereLike: {taskEditUserList: this.userId},
               orderBy: [{ column: 'operationAt', order: 'desc' }]
             }
           }
         });
 
         const rows = result.data.appData.resultData.rows;
+        const statusMap = {
+          'running': '审核中',
+          'end': '已结束',
+        };
         rows.forEach(row => {
           row.taskFormInput = JSON.parse(row.taskFormInput);
           row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
+          row.taskStatus = statusMap[row.taskStatus];
         });
-        this.tableData = rows.filter(item => !item.taskEditedUserList || !item.taskEditedUserList.includes(this.userId));
+        this.tableData = rows;
         this.isTableLoading = false;
-      },
-      async getHistoryData() {
-        this.isTableLoading = true;
-        const result = await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'todo',
-              actionId: 'selectHistoryList',
-              actionData: {},
-              where: {taskStatus: 'running'},
-              whereLike: {taskEditUserList: '<$ ctx.userInfo.userId $>', taskConfigId: 'userTask-'},
-              orderBy: [{ column: 'id', order: 'desc' }]
-            }
-          }
-        });
-
-        const rows = result.data.appData.resultData.rows;
-        rows.forEach(row => {
-          row.taskFormInput = JSON.parse(row.taskFormInput);
-          row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
-        });
-        this.historyData = rows;
       },
       // ---------- 斑马纹开关 uiAction >>>>>>>>>> --------
       async openTableZebraLineMenu(funObj) {
@@ -356,53 +263,16 @@
       // ---------- 审核、查看 uiAction >>>>>>>>>>>> --------
       async prepareUpdateFormData(funObj) {
         this.updateItem = _.cloneDeep(funObj);
-        this.updateItem.taskHistoryList = []; // 审核历史
-        this.updateItem.taskComment = ''; // 备注
-        this.lineTypeList = []; // 所有操作按钮
       },
 
       async closeSubmitDrawer() {
-        this.isSubmitDrawerShown = false;
+        this.isViewDrawerShown = false;
       },
 
       async openUpdateDrawer() {
-        this.isSubmitDrawerShown = true;
+        this.isViewDrawerShown = true;
       },
-
-      async confirmSumitDialog() {
-        if (await window.confirmDialog({title: "审核", content: "确定提交审核吗？"}) === false) {
-          throw new Error("[confirmSumitDialog] 否");
-        }
-      },
-
-      async clearSubmitData() {
-        this.updateItem = {};
-      },
-      async submitForReview(type) {
-        await window.vtoast.loading("提交审核");
-        await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'todo',
-              actionId: 'submitNode',
-              actionData: {type, id: this.updateItem.id, taskId: this.updateItem.taskId, taskComment: this.updateItem.taskComment}
-            }
-          }
-        })
-        await window.vtoast.success("提交审核成功");
-        setTimeout(()=> {
-          this.$emit('close-detail-drawer')
-          // if (document.referrer) {
-          //   location.href = document.referrer;
-          // } else {
-          //   history.back();
-          // }
-        }, 1000);
-      },
-      setLineTypeList(lineTypeList) {
-        this.lineTypeList = _.uniqBy((lineTypeList||'').split(",").map(lineType => ({type: lineType, label: lineType})), 'type');
-      },
-      // ---------- <<<<<<<<<<< 审核、查看 uiAction  --------
+      // ---------- 审核、查看 uiAction >>>>>>>>>>>> --------
     }
   })
 </script>
@@ -410,3 +280,4 @@
 <style scoped>
 </style>
 {% endblock %}
+s
