@@ -9,7 +9,7 @@
       <v-main class="mt-15">
         <!-- 头部内容 >>>>>>>>>>>>> -->
         <div class="jh-page-second-bar px-8">
-          <div class="pt-3 text-h7 font-weight-bold">审批记录
+          <div class="pt-3 text-h7 font-weight-bold">审批列表
             <!-- 帮助页按钮 -->
             <v-icon @click="isHelpPageDrawerShown = true" color="success" small>mdi-help-circle-outline</v-icon>
           </div>
@@ -117,7 +117,7 @@
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
         <v-navigation-drawer v-model="isHelpPageDrawerShown" fixed temporary right width="80%" hide-overlay
           class="elevation-24">
-          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#todo.md`" width="100%"
+          <iframe style="border: 0" :src="`/${appInfo.appId}/pageDoc#taskHistory.md`" width="100%"
             height="100%"></iframe>
 
           <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
@@ -163,7 +163,7 @@
           disabled: true,
         },
         {
-          text: '待办',
+          text: '所有审批',
           disabled: true,
         }
       ],
