@@ -253,7 +253,8 @@
       isSubmitDrawerShown: false,
       updateItem: {},
       workflowType: 'todo', // todo, history
-      lineTypeList: []
+      lineTypeList: [],
+      userId: '<$ ctx.userInfo.userId $>'
     },
     // 计算
     computed: {
@@ -309,7 +310,7 @@
               actionId: 'selectItemList',
               actionData: {},
               where: {taskStatus: 'running'},
-              whereLike: {taskEditUserList: '<$ ctx.userInfo.userId $>'},
+              whereLike: {taskEditUserList: this.userId},
               orderBy: [{ column: 'operationAt', order: 'desc' }]
             }
           }
@@ -320,7 +321,7 @@
           row.taskFormInput = JSON.parse(row.taskFormInput);
           row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
         });
-        this.tableData = rows;
+        this.tableData = rows.filter(item => !item.taskEditedUserList.includes(this.userId));
         this.isTableLoading = false;
       },
       async getHistoryData() {

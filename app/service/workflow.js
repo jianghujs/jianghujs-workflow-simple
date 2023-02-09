@@ -40,6 +40,7 @@ class WorkflowService extends Service {
     const workflowConfigCustom = workflowPersonList.filter(item=> item.id.includes('userTask-'));
     workflowConfigCustom.forEach(item => {
       item.assignValue = taskUserList;
+      // item.isNeedAllApproval = true; 开启所有人审核
     })
     actionData.workflowConfigCustom = JSON.stringify({nodeListOfUserTaskNode: workflowConfigCustom});
     actionData.workflowId = workflow.workflowId;
