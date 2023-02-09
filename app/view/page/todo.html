@@ -30,20 +30,24 @@
                 >
                   <v-btn value="todo" small>
                     <v-badge
+                      v-if="tableData.length"
                       inline
                       :content="tableData.length"
                       color="warning"
                     >
                       <span class="hidden-sm-and-down">待处理</span>
                     </v-badge>
+                    <span v-else class="hidden-sm-and-down">待处理</span>
                   </v-btn>
-                  <v-btn value="finish" small>
+                  <v-btn value="history" small>
                     <v-badge
+                      v-if="historyData.length"
                       inline
                       :content="historyData.length"
                     >
                       <span class="hidden-sm-and-down">已处理</span>
                     </v-badge>
+                    <span v-else class="hidden-sm-and-down">已处理</span>
                   </v-btn>
                 </v-btn-toggle>
               </v-col>
@@ -100,12 +104,10 @@
             </v-data-table>
           </v-card>
           <!-- <<<<<<<<<<<<< 页面内容 -->
-          <!--抽屉遮罩层-->
-          <v-overlay app :value="isCreateDrawerShown || isUpdateDrawerShown || isHelpPageDrawerShown"></v-overlay>
           <!--编辑抽屉-->
-          <v-navigation-drawer v-model="isUpdateDrawerShown" fixed temporary right hide-overlay width="80%"
+          <v-navigation-drawer v-model="isSubmitDrawerShown" :permanent="isSubmitDrawerShown" fixed temporary right hide-overlay width="80%"
             class="elevation-24">
-            <v-form v-if="isUpdateDrawerShown" ref="updateForm" lazy-validation>
+            <v-form v-if="isSubmitDrawerShown" ref="updateForm" lazy-validation>
               <!--抽屉标题-->
               <v-row>
                 <span class="title pa-6 pl-8">审核信息</span>
@@ -145,7 +147,7 @@
 
             <!--抽屉关闭按钮-->
             <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
-              @click="isUpdateDrawerShown = false">
+              @click="isSubmitDrawerShown = false">
               <v-icon>mdi-close</v-icon>
             </v-btn>
           </v-navigation-drawer>
@@ -211,8 +213,6 @@
       tableZebraLineMenuPosition: {x: null, y: null},
       isTableZebraLineShown: true,
       // 生日日期选择
-      isDataPickerShown: false,
-      dataPickerPosition: {x: null, y: null},
       validationRules: {
         requireRules: [
           v => !!v || 'This is required',
@@ -229,16 +229,9 @@
         { text: "操作时间", value: "operationAt", width: 250 }
       ],
 
-      isCreateDrawerShown: false,
-      createItem: {},
-      createActionData: {},
-      isUpdateDrawerShown: false,
+      isSubmitDrawerShown: false,
       updateItem: {},
-      updateItemId: null,
-      updateActionData: {},
-      deleteItem: {},
-      deleteItemId: null,
-      workflowType: 'todo',
+      workflowType: 'todo', // todo, history
       lineTypeList: []
     },
     // 计算
@@ -265,37 +258,17 @@
           case 'openTableZebraLineMenu':
             await this.openTableZebraLineMenu(uiActionData);
             break;
-          case 'startCreateItem':
-            await this.prepareCreateFormData();
-            await this.openCreateDrawer();
-            break;
-          case 'createItem':
-            await this.prepareCreateValidate();
-            await this.confirmCreateItemDialog();
-            await this.prepareDoCreateItem();
-            await this.doCreateItem();
-            await this.closeCreateDrawer();
-            await this.clearCreateItemData();
-            break;
           case 'startUpdateItem':
             await this.prepareUpdateFormData(uiActionData);
             await this.openUpdateDrawer();
             break;
           case 'submitNode':
             await this.confirmSumitDialog();
-            await this.submitNode(uiActionData);
-            await this.closeUpdateDrawer();
-            await this.clearUpdateItemData();
+            await this.submitForReview(uiActionData);
+            await this.closeSubmitDrawer();
+            await this.clearSubmitData();
             this.getTableData();
             this.getHistoryData();
-            break;
-          case 'deleteItem':
-            await this.prepareDeleteFormData(uiActionData);
-            await this.confirmDeleteItemDialog();
-            await this.prepareDoDeleteItem();
-            await this.doDeleteItem();
-            await this.clearDeleteItem();
-            await this.getTableData();
             break;
           default:
             console.error("[doUiAction] uiActionId not find", { uiActionId });
@@ -321,6 +294,7 @@
         const rows = result.data.appData.resultData.rows;
         rows.forEach(row => {
           row.taskFormInput = JSON.parse(row.taskFormInput);
+          row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
         });
         this.tableData = rows;
         this.isTableLoading = false;
@@ -343,16 +317,10 @@
         const rows = result.data.appData.resultData.rows;
         rows.forEach(row => {
           row.taskFormInput = JSON.parse(row.taskFormInput);
+          row.operationAt = dayjs(row.operationAt).format('YYYY-MM-DD HH:mm:ss');
         });
         this.historyData = rows;
       },
-      // ---------- 生日选择 uiAction >>>>>>>>>> --------
-      async openDataPicker(funObj) {
-        this.dataPickerPosition.x = funObj.x - funObj.offsetX;
-        this.dataPickerPosition.y = funObj.y - funObj.offsetY + 40;
-        this.isDataPickerShown = !this.isDataPickerShown;
-      },
-      // ---------- <<<<<<<<<< 生日选择 uiAction --------
       // ---------- 斑马纹开关 uiAction >>>>>>>>>> --------
       async openTableZebraLineMenu(funObj) {
         this.tableZebraLineMenuPosition.x = funObj.x -funObj.offsetX + 10;
@@ -360,76 +328,20 @@
         this.isTableZebraLineMenuShown = !this.isTableZebraLineMenuShown;
       },
       // ---------- <<<<<<<<<< 斑马纹开关 uiAction --------
-      // ---------- 新增数据 uiAction >>>>>>>>>> --------
-      async prepareCreateFormData() {
-        this.createItem = {};
-      },
-
-      async openCreateDrawer() {
-        this.isCreateDrawerShown = true;
-      },
-      async prepareCreateValidate() {
-        if(await this.$refs.createForm.validate()) {
-          return true;
-        }
-        throw new Error("请完善表单信息")
-      },
-
-      async confirmCreateItemDialog() {
-        if (await window.confirmDialog({title: "新增", content: "确定新增吗？"}) === false) {
-          throw new Error("[confirmCreateFormDialog] 否");
-        }
-      },
-
-      prepareDoCreateItem() {
-        const {id, ...data} = this.createItem;
-        this.createActionData = data;
-      },
-
-      async doCreateItem() {
-        await window.jhMask.show();
-        await window.vtoast.loading("新增学生");
-        await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'doUiAction',
-              actionId: 'insertItem',
-              actionData: this.createActionData
-            }
-          }
-        })
-        await window.jhMask.hide();
-        await window.vtoast.success("新增学生成功");
-      },
-      async closeCreateDrawer() {
-        this.isCreateDrawerShown = false;
-      },
-      async clearCreateItemData() {
-        this.createItem = {};
-        this.createActionData = null;
-      },
-      // ---------- <<<<<<<<<<< 新增数据 uiAction  --------
-      // ---------- 修改数据 uiAction >>>>>>>>>>>> --------
+      // ---------- 审核、查看 uiAction >>>>>>>>>>>> --------
       async prepareUpdateFormData(funObj) {
         this.updateItem = _.cloneDeep(funObj);
-        this.updateItem.taskHistoryList = [];
-        this.updateItem.taskComment = '';
-        this.lineTypeList = [];
+        this.updateItem.taskHistoryList = []; // 审核历史
+        this.updateItem.taskComment = ''; // 备注
+        this.lineTypeList = []; // 所有操作按钮
       },
 
-      async closeUpdateDrawer() {
-        this.isUpdateDrawerShown = false;
+      async closeSubmitDrawer() {
+        this.isSubmitDrawerShown = false;
       },
 
       async openUpdateDrawer() {
-        this.isUpdateDrawerShown = true;
-      },
-
-      async prepareUpdateValidate() {
-        if(await this.$refs.updateForm.validate()) {
-          return true;
-        }
-        throw new Error("请完善表单信息")
+        this.isSubmitDrawerShown = true;
       },
 
       async confirmSumitDialog() {
@@ -438,12 +350,10 @@
         }
       },
 
-      async clearUpdateItemData() {
+      async clearSubmitData() {
         this.updateItem = {};
-        this.updateActionData = null;
-        this.updateItemId = null;
       },
-      async submitNode(type) {
+      async submitForReview(type) {
         await window.vtoast.loading("提交数据");
         await window.jianghuAxios({
           data: {
@@ -467,39 +377,7 @@
       setLineTypeList(lineTypeList) {
         this.lineTypeList = _.uniqBy((lineTypeList||'').split(",").map(lineType => ({type: lineType, label: lineType})), 'type');
       },
-      // ---------- <<<<<<<<<<< 修改数据 uiAction  --------
-      // ---------- 删除数据 uiAction >>>>>>>>>>>> --------
-      async prepareDeleteFormData(funObj) {
-        this.deleteItem = _.cloneDeep(funObj);
-      },
-      async confirmDeleteItemDialog() {
-        if (await window.confirmDialog({title: "删除", content: "确定删除吗？"}) === false) {
-          throw new Error("[confirmDeleteItemDialog] 否");
-        }
-      },
-      async prepareDoDeleteItem() {
-        const { id } = this.deleteItem;
-        this.deleteItemId = id;
-      },
-      async doDeleteItem() {
-        await window.vtoast.loading("删除学生");
-        await window.jianghuAxios({
-          data: {
-            appData: {
-              pageId: 'doUiAction',
-              actionId: 'deleteItem',
-              actionData: {},
-              where: { id: this.deleteItemId }
-            }
-          }
-        });
-        await window.vtoast.success("删除学生成功");
-      },
-      async clearDeleteItem() {
-        this.deleteItem = {};
-        this.deleteItemId = null;
-      }
-      // ---------- <<<<<<<<<<< 删除数据 uiAction  --------
+      // ---------- <<<<<<<<<<< 审核、查看 uiAction  --------
     }
   })
 </script>
