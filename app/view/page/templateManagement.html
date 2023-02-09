@@ -48,6 +48,7 @@
               <!--表格行操作按钮-->
               <template v-slot:item.action="{ item }">
                 <span role="button" class="success--text jh-font-size-3 pr-2"
+                  v-if="item.formItemList"
                   @click="doUiAction('startCreateWorkflow', {formItemList: item.formItemList, group: item.name})">
                   <v-icon size="14" class="success--text">mdi-note-edit-outline</v-icon>申请
                 </span>
@@ -74,6 +75,50 @@
           </v-card>
           <!-- <<<<<<<<<<<<< 页面内容 -->
         </div>
+        <!-- <<<<<<<<<<<<< 创建审批抽屉 -->
+        <v-navigation-drawer v-model="isCreateDrawerShown" :permanent="isCreateDrawerShown" fixed temporary right width="80%"
+          class="elevation-24">
+          <v-form v-if="isCreateDrawerShown" ref="createForm" lazy-validation>
+            <!--抽屉标题-->
+            <v-row>
+              <span class="title pa-6 pl-8">创建审批</span>
+            </v-row>
+            <!--抽屉表单主体-->
+            <v-row class="mt-0 px-6">
+              <v-col cols="12" sm="12" md="4" v-for="(item, index) in createFormList" :key="index">
+                <form-item :form-item="item"></form-item>
+              </v-col>
+              <v-col cols="12" sm="12" md="4">
+                <span class="jh-input-label">附件</span>
+                xxx
+              </v-col>
+              <v-col cols="12" sm="12" md="12">
+                <span class="jh-input-label">审批流程 - 添加审批人</span>
+                <v-select
+                  v-model="createItem.approver"
+                  :items="userList"
+                  item-text="text"
+                  item-value="value"
+                  multiple
+                  dense single-line filled
+                  required 
+                  :rules="validationRules.requireRules" 
+                ></v-select>
+              </v-col>
+            </v-row>
+            <!--抽屉操作按钮-->
+            <v-row class="justify-end mx-0 mt-8 px-6">
+              <v-btn color="success" @click="doUiAction('createWorkflow')" small>保存</v-btn>
+              <v-btn class="ml-2" @click="isCreateDrawerShown = false" small>取消</v-btn>
+            </v-row>
+          </v-form>
+          <!--抽屉关闭按钮-->
+          <v-btn elevation="0" color="success" fab absolute top left small tile class="drawer-close-float-btn"
+            @click="isCreateDrawerShown = false">
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-navigation-drawer>
+        <!-- 创建审批抽屉 >>>>>>>>>>>>> -->
 
         <!-- 帮助页抽屉 >>>>>>>>>>>>> -->
         <v-navigation-drawer v-model="isHelpPageDrawerShown" fixed temporary right width="80%" hide-overlay
@@ -210,6 +255,8 @@
       isTableZebraLineShown: true,
       isTableZebraLineMenuShown: false,
       tableZebraLineMenuPosition: {x: null, y: null},
+
+      isCreateDrawerShown: false,
       createFormList: [],
       createItem: {
         approver: [],
@@ -319,8 +366,8 @@
             }
           }
         })
-        // await window.jhMask.hide();
-        // await window.vtoast.success("新增学生成功");
+        await window.jhMask.hide();
+        await window.vtoast.success("申请成功");
       },
       async closeCreateDrawer() {
         this.isCreateDrawerShown = false;

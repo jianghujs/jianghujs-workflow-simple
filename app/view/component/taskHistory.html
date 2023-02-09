@@ -11,6 +11,25 @@
       fixed-header
       hide-default-footer
       class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
+      <template v-slot:item.taskHandleDesc="{ item }">
+        <span v-if="item.taskConfigId.includes('userTask-')">
+          <v-chip
+            v-if="item.taskHandleDesc === '拒绝'"
+            color="red"
+            small outlined label
+          >
+            {{item.taskHandleDesc}}
+          </v-chip>
+          <v-chip
+            v-else
+            color="green"
+            small outlined label
+          >
+            {{item.taskHandleDesc}}
+          </v-chip>
+        </span>
+        <span v-else>{{item.taskHandleDesc}}</span>
+      </template>
     </v-data-table>
   </div>
 </script>
@@ -49,7 +68,7 @@
       },
     },
     methods: {
-      // ---------- 日期选择 >>>>>>>>>> --------
+      // ---------- 获取列表 >>>>>>>>>> --------
       async getTableData() {
         this.isTableLoading = true;
         const result = await window.jianghuAxios({
@@ -66,7 +85,7 @@
         this.$emit('line-type-list', lineTypeList);
         this.isTableLoading = false;
       },
-      // ---------- <<<<<<<<<< 日期选择 --------
+      // ---------- <<<<<<<<<< 获取列表 --------
     },
   });
 

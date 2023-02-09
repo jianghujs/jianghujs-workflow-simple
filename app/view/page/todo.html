@@ -61,7 +61,7 @@
             <!--表格-->
             <v-data-table
               :headers="headers"
-              :items="workflowType === 'todo' ? tableData : historyData"
+              :items="tableDataList"
               :search="searchInput"
               :footer-props="{ itemsPerPageOptions: [20, 50, -1], itemsPerPageText: '每页行数', itemsPerPageAllText: '所有'}"
               :items-per-page="-1"
@@ -71,6 +71,26 @@
               checkbox-color="success"
               fixed-header
               class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
+
+              <template v-slot:item.taskTitle="{ item }">
+                <span>{{item.taskTitle}}</span>
+                <span v-if="workflowType != 'todo'">
+                  <v-chip
+                    v-if="item.taskHandleDesc === '拒绝'" label outlined
+                    color="red"
+                    small
+                  >
+                    已{{item.taskHandleDesc}}
+                  </v-chip>
+                  <v-chip
+                    v-else label outlined
+                    color="green"
+                    small
+                  >
+                    已{{item.taskHandleDesc}}
+                  </v-chip>
+                </span>
+              </template>
               <!--表格行操作按钮-->
               <template v-slot:item.action="{ item }">
                 <span v-if="workflowType === 'todo'" role="button" class="success--text jh-font-size-3 pr-2"
@@ -236,6 +256,9 @@
     },
     // 计算
     computed: {
+      tableDataList() {
+        return this.workflowType === 'todo' ? this.tableData : this.historyData;
+      },
     },
     watch: {
     },
@@ -354,7 +377,7 @@
         this.updateItem = {};
       },
       async submitForReview(type) {
-        await window.vtoast.loading("提交数据");
+        await window.vtoast.loading("提交审核");
         await window.jianghuAxios({
           data: {
             appData: {
@@ -364,7 +387,7 @@
             }
           }
         })
-        await window.vtoast.success("提交数据成功");
+        await window.vtoast.success("提交审核成功");
         setTimeout(()=> {
           this.$emit('close-detail-drawer')
           // if (document.referrer) {

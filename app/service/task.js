@@ -357,10 +357,11 @@ class TaskService extends Service {
     // taskFormInput = JSON.stringify(taskFormInput);
     // const historyTaskFormInput = JSON.parse(taskInfo.taskFormInput)
     // historyTaskFormInput .input = taskTpl.input;
+    const taskFormInput = taskInfo.taskFormInput;
     const history = {
       ...taskInfo,
       // taskFormInput: JSON.stringify(historyTaskFormInput),
-      taskFormInput: taskInfo.taskFormInput,
+      taskFormInput,
       taskExplain: currentNode.label,
       taskConfigId: currentNode.id,
       taskHandleDesc:  type,
