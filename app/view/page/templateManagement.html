@@ -9,7 +9,7 @@
       <v-main class="mt-15">
         <!-- 头部内容 >>>>>>>>>>>>> -->
         <div class="jh-page-second-bar px-8">
-          <div class="pt-3 text-h7 font-weight-bold">新申请审批
+          <div class="pt-3 text-h7 font-weight-bold">新申请任务
             <!-- 帮助页按钮 -->
             <v-icon @click="isHelpPageDrawerShown = true" color="success" small>mdi-help-circle-outline</v-icon>
           </div>
@@ -19,8 +19,8 @@
 
         <div class="jh-page-body-container px-8">
           <!-- 页面内容 >>>>>>>>>>>>> -->
-          <v-card class="rounded-lg mb-4">
-            <v-row class="ma-0 py-0 px-4">
+          <v-card class="rounded-lg">
+            <v-row class="ma-0 pa-4">
               <!--新增按钮-->
               <v-col cols="12" xs="4" sm="4" md="4" xl="4" class="pl-0">
                 <!-- <v-btn color="success" small class="elevation-0 mr-2"
@@ -28,7 +28,7 @@
               </v-col>
               <v-spacer></v-spacer>
               <!--搜索-->
-              <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="px-0">
+              <v-col cols="12" xs="8" sm="4" md="3" xl="2" class="pa-0">
                 <v-text-field v-model="searchInput" color="success" prefix="搜索：" class="jh-v-input" dense filled single-line hide-details></v-text-field>
               </v-col>
             </v-row>
@@ -162,6 +162,7 @@
 
 <!-- 加载页面组件 >>>>>>>>>>>>> -->
 {% include 'component/formItem.html' %}
+{% include 'common/jianghuJs/fixedTableHeightV4.html' %}
 <!-- <<<<<<<<<<<<< 加载页面组件 -->
 
 <script type="module">
@@ -178,7 +179,7 @@
           disabled: true,
         },
         {
-          text: '申请模板',
+          text: '发起任务',
           disabled: true,
         }
       ],
@@ -256,8 +257,8 @@
       ],
       headers: [
         { text: '操作', value: 'action', align: 'center', sortable: false, width: 120, class: 'fixed', cellClass: 'fixed' },
-        { text: '审批名称', value: 'name' },
-        { text: '审批名称', value: 'desc' },
+        { text: '任务模板名称', value: 'name' },
+        { text: '任务模板详情', value: 'desc' },
       ],
       searchInput: '',
       isHelpPageDrawerShown: false,
