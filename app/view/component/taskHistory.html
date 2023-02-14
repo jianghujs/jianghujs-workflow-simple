@@ -1,4 +1,4 @@
-<!-- formItem.html >>>>>>>>>>>>> -->
+<!-- taskHistory.html >>>>>>>>>>>>> -->
 <script type="text/html" id="task-history">
   <div>
     <v-data-table
@@ -11,30 +11,29 @@
       fixed-header
       hide-default-footer
       class="jh-fixed-table-height elevation-0 mt-0 mb-xs-4">
+      <!--没有数据-->
+      <template v-slot:loading>
+        <div class="jh-no-data">数据加载中</div>
+      </template>
+      <template v-slot:no-data>
+        <div class="jh-no-data">暂无数据</div>
+      </template>
+      <template v-slot:no-results>
+        <div class="jh-no-data">暂无数据</div>
+      </template>
+      <!-- 节点说明 -->
       <template v-slot:item.taskHandleDesc="{ item }">
-        <span v-if="item.taskConfigId.includes('userTask-')">
+        <template v-if="item.taskConfigId.includes('userTask-')">
+          <v-chip :color="item.taskHandleDesc === '拒绝' ? 'red' : 'green'" x-small dark>
+            {{item.taskExplain}}：{{item.taskHandleDesc}}
+          </v-chip>
+        </template>
+        <template v-else>
+          <v-chip color="grey lighten-1" x-small dark>
+            {{item.taskHandleDesc}}
+          </v-chip>
+        </template>
 
-          <v-icon
-            large
-          >
-          mdi-arrow-right-thin
-          </v-icon>
-          <v-chip
-            v-if="item.taskHandleDesc === '拒绝'"
-            color="red"
-            small dark
-          >
-            {{item.taskHandleDesc}}
-          </v-chip>
-          <v-chip
-            v-else
-            color="green"
-            small dark
-          >
-            {{item.taskHandleDesc}}
-          </v-chip>
-        </span>
-        <span v-else>{{item.taskHandleDesc}}</span>
       </template>
     </v-data-table>
   </div>
@@ -56,9 +55,8 @@
         isTableLoading: false,
         headers: [
           {text: "名称", value: "taskTitle", width: 230, class: 'fixed', cellClass: 'fixed'},
-          {text: "节点说明", value: "taskExplain", width: 200}, 
-          {text: "操作人", value: "operationByUser", width: 80}, 
-          {text: "操作描述", value: "taskHandleDesc", width: 120}, 
+          {text: "节点说明", value: "taskHandleDesc", width: 120},
+          {text: "操作人", value: "operationByUser", width: 120},
           {text: "操作时间", value: "operationAt", width: 250},
         ],
         tableData: [],
@@ -101,4 +99,4 @@
 </script>
 <style>
 </style>
-<!-- <<<<<<<<<<<<< formItem.html -->
+<!-- <<<<<<<<<<<<< taskHistory.html -->
